@@ -32,10 +32,10 @@ public class XssEscapeServletFilter implements Filter {
 	public XssEscapeServletFilter(Gson gson) {
 		this.gson = gson;
 	}
-	private XssEscapeFilter xssEscapeFilter = XssEscapeFilter.getInstance();
+	private final XssEscapeFilter xssEscapeFilter = XssEscapeFilter.getInstance();
 
 	@Override
-	public void init(FilterConfig filterConfig) throws ServletException {
+	public void init(FilterConfig filterConfig) {
 	}
 
 	@Override

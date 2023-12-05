@@ -47,7 +47,7 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 	private final Gson gson;
 	private final boolean isMultipart;
 
-	public XssEscapeServletFilterWrapper(ServletRequest request, XssEscapeFilter xssEscapeFilter, Gson gson) throws ServletException, IOException {
+	public XssEscapeServletFilterWrapper(ServletRequest request, XssEscapeFilter xssEscapeFilter, Gson gson) {
 		super((HttpServletRequest) request);
 
 		isMultipart = isMultipartContent((HttpServletRequest) request);
@@ -77,9 +77,9 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 
 	@Override
 	public String[] getParameterValues(String paramName) {
-		String values[] = super.getParameterValues(paramName);
+		String[] values = super.getParameterValues(paramName);
 		if (values == null) {
-			return values;
+			return null;
 		}
 		for (int index = 0; index < values.length; index++) {
 			values[index] = doFilter(paramName, values[index]);
@@ -87,7 +87,6 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 		return values;
 	}
 
-	@SuppressWarnings("unchecked")
 	@Override
 	public Map<String, String[]> getParameterMap() {
 		Map<String, String[]> paramMap = super.getParameterMap();
@@ -96,7 +95,7 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 		Set<Map.Entry<String, String[]>> entries = paramMap.entrySet();
 		for (Map.Entry<String, String[]> entry : entries) {
 			String paramName = entry.getKey();
-			Object[] valueObj = (Object[]) entry.getValue();
+			Object[] valueObj = entry.getValue();
 			String[] filteredValue = new String[valueObj.length];
 			for (int index = 0; index < valueObj.length; index++) {
 				filteredValue[index] = doFilter(paramName, String.valueOf(valueObj[index]));
