@@ -16,6 +16,7 @@
 
 package com.navercorp.lucy.security.xss.servletfilter;
 
+import com.google.gson.Gson;
 import jakarta.servlet.*;
 
 import java.io.IOException;
@@ -26,6 +27,11 @@ import java.io.IOException;
  */
 public class XssEscapeServletFilter implements Filter {
 
+	private final Gson gson;
+
+	public XssEscapeServletFilter(Gson gson) {
+		this.gson = gson;
+	}
 	private XssEscapeFilter xssEscapeFilter = XssEscapeFilter.getInstance();
 
 	@Override
@@ -34,7 +40,7 @@ public class XssEscapeServletFilter implements Filter {
 
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
-		chain.doFilter(new XssEscapeServletFilterWrapper(request, xssEscapeFilter), response);
+		chain.doFilter(new XssEscapeServletFilterWrapper(request, xssEscapeFilter, gson), response);
 	}
 
 	@Override
