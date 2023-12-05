@@ -21,10 +21,7 @@ import jakarta.servlet.*;
 
 import java.io.IOException;
 
-/**
- * @author todtod80
- * @author leeplay
- */
+
 public class XssEscapeServletFilter implements Filter {
 
 	private final Gson gson;

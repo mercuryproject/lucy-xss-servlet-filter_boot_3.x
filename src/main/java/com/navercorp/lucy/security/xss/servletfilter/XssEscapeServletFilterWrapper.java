@@ -26,6 +26,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.Part;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -34,10 +35,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.*;
 
-/**
- * @author todtod80
- * @author leeplay
- */
+
 public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 
     private static final Log LOG = LogFactory.getLog(XssEscapeServletFilterWrapper.class);
@@ -131,7 +129,8 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
     }
 
     private boolean isMultipartContent(HttpServletRequest request) {
-        return Objects.equals("multipart/form-data", request.getContentType().toLowerCase());
+        String contentType = request.getContentType();
+        return !StringUtils.isEmpty(contentType) && Objects.equals("multipart/form-data", contentType.toLowerCase());
     }
 
 
@@ -141,6 +140,28 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
             Object value = map.get(key);
             if (value instanceof String) {
                 map.put(key, doFilter(key, (String) map.get(key)));
+            } else if (value instanceof Map) {
+                this.putEscapedData((Map<String, Object>) value);
+            } else if (value instanceof List) {
+                List _list = (List) value;
+                if (!_list.isEmpty()) {
+                    if (_list.get(0) instanceof Map) {
+                        _list.forEach(item -> {
+                            Map<String, Object> _map = (Map<String, Object>) item;
+                            putEscapedData(_map);
+                        });
+                    } else if (_list.get(0) instanceof String) {
+                        List<String> escapedList = new ArrayList<>();
+                        _list.forEach(item -> {
+                            escapedList.add(doFilter("", (String) item));
+                        });
+                        _list.clear();
+                        escapedList.forEach(escapedItem -> {
+                            _list.add(escapedItem);
+                        });
+                    }
+                }
+
             }
         }
     }
@@ -150,10 +171,25 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
         String inputString = IOUtils.toString(originalInputStream, getCharacterEncoding());
         String result = null;
         if (inputString.startsWith("[") && inputString.endsWith("]")) {
-            List<Map<String, Object>> list = gson.fromJson(inputString, List.class);
-            list.forEach(this::putEscapedData);
-            result = gson.toJson(list);
-        }else {
+            List<Object> list = gson.fromJson(inputString, List.class);
+            if (!list.isEmpty()) {
+                if (list.get(0) instanceof Map) {
+                    list.forEach(item -> {
+                        Map<String, Object> map = (Map<String, Object>) item;
+                        putEscapedData(map);
+                    });
+                    result = gson.toJson(list);
+                } else if (list.get(0) instanceof String) {
+                    List<String> escapedList = new ArrayList<>();
+                    list.forEach(item -> {
+                        escapedList.add(doFilter("", (String) item));
+                    });
+
+                    result = gson.toJson(escapedList);
+                }
+            }
+
+        } else {
             Map<String, Object> map = gson.fromJson(inputString, Map.class);
             putEscapedData(map);
             result = gson.toJson(map);
@@ -173,8 +209,11 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 
         @Override
         public InputStream getInputStream() throws IOException {
-            if (Objects.equals("application/json", originalPart.getContentType().toLowerCase())) {
-                return getEscapedInputStream(originalPart.getInputStream());
+            String contentType = originalPart.getContentType();
+            if (!StringUtils.isEmpty(contentType)) {
+                if (Objects.equals("application/json", originalPart.getContentType().toLowerCase())) {
+                    return getEscapedInputStream(originalPart.getInputStream());
+                }
             }
             return originalPart.getInputStream();
         }
