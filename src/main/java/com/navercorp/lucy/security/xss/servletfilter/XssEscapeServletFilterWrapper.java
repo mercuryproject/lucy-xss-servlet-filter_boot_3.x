@@ -107,10 +107,12 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
 
     @Override
     public ServletInputStream getInputStream() {
+
         try {
-            if (isMultipart) {
+            if (!Objects.equals(getContentType(), "application/json")) {
                 return super.getInputStream();
             }
+
             return getEscapedInputStream(super.getInputStream());
         } catch (IOException | JsonParseException ioe) {
             LOG.error("get escapedInputStream Exception", ioe);
@@ -211,7 +213,7 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
         public InputStream getInputStream() throws IOException {
             String contentType = originalPart.getContentType();
             if (!StringUtils.isEmpty(contentType)) {
-                if (Objects.equals("application/json", originalPart.getContentType().toLowerCase())) {
+                if (Objects.equals("application/json", contentType.toLowerCase())) {
                     return getEscapedInputStream(originalPart.getInputStream());
                 }
             }
