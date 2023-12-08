@@ -197,8 +197,8 @@ public class XssEscapeServletFilterWrapper extends HttpServletRequestWrapper {
             result = gson.toJson(map);
         }
 
+        return new XssFilteredServletInputStream(new ByteArrayInputStream(Objects.requireNonNullElse(result, inputString).getBytes(getCharacterEncoding())));
 
-        return new XssFilteredServletInputStream(new ByteArrayInputStream(result.getBytes(getCharacterEncoding())));
     }
 
     public class XssFilteredPart implements Part {
