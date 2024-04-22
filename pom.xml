@@ -22,12 +22,12 @@
 
 	<distributionManagement>
 		<snapshotRepository>
-			<id>${snapshotRepositoryId}</id>
-			<url>${snapshotRepositoryUrl}</url>
+			<id>mercury-snapshots</id>
+			<url>https://nexus.mercurycommerce.co.kr/repository/maven-snapshots/</url>
 		</snapshotRepository>
 		<repository>
-			<id>${releaseRepositoryId}</id>
-			<url>${releaseRepositoryUrl}</url>
+			<id>mercury-releases</id>
+			<url>https://nexus.mercurycommerce.co.kr/repository/maven-releases/</url>
 		</repository>
 	</distributionManagement>
 
